@@ -6,8 +6,8 @@ var gameOptions = {
     boardSize: {
         rows: 4,
         cols: 4
-    }
-    // tweenSpeed: 2000
+    },
+    tweenSpeed: 2000
 }
 
 window.onload = function() {
@@ -79,6 +79,12 @@ class playGame extends Phaser.Scene {
             this.boardArray[chosenTile.row][chosenTile.col].tileValue = 1;
             this.boardArray[chosenTile.row][chosenTile.col].tileSprite.visible = true;
             this.boardArray[chosenTile.row][chosenTile.col].tileSprite.setFrame(0);
+            this.boardArray[chosenTile.row][chosenTile.col].tileSprite.alpha = 0;
+            this.tweens.add({
+                targets: [this.boardArray[chosenTile.row][chosenTile.col].tileSprite],
+                alpha: 1,
+                duration: gameOptions.tweenSpeed
+            });
         }
     }
 
