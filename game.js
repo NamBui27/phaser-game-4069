@@ -7,7 +7,7 @@ var gameOptions = {
         rows: 4,
         cols: 4
     },
-    tweenSpeed: 2000,
+    tweenSpeed: 200,
     swipeMaxTime: 1000, // < 1s
     swipeMinDistance: 20, // > 20pixels
     swipeMinNormal: 0.85 //  
@@ -42,7 +42,7 @@ class bootGame extends Phaser.Scene {
         });
     }
     create() {
-        console.log("game is booting...");
+        // console.log("game is booting...");
         this.scene.start("PlayGame");
     }
 }
@@ -54,12 +54,12 @@ class playGame extends Phaser.Scene {
     create() {
         this.canMove = false;
         this.boardArray = [];
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < gameOptions.boardSize.rows; i++) {
             this.boardArray[i] = [];
-            for (let j = 0; j < 4; j++) {
+            for (let j = 0; j < gameOptions.boardSize.cols; j++) {
                 var tilePosition = this.getTilePosition(i, j);
                 this.add.image(tilePosition.x, tilePosition.y, "emptytile");
-                let tile = this.add.sprite(tilePosition.x, tilePosition.y, "tiles", 3);
+                let tile = this.add.sprite(tilePosition.x, tilePosition.y, "tiles", 0);
                 tile.visible = false;
                 this.boardArray[i][j] = {
                     tileValue: 0,
@@ -78,18 +78,67 @@ class playGame extends Phaser.Scene {
         var dRow = (d == LEFT || d == RIGHT) ? 0 : d == UP ? -1 : 1;
         var dCol = (d == UP || d == DOWN) ? 0 : d == LEFT ? -1 : 1;
         this.canMove = false;
-        for (var i = 0; i < gameOptions.boardSize.rows; i++) {
-            for (var j = 0; j < gameOptions.boardSize.cols; j++) {
-                var curRow = dRow == 1 ? (gameOptions.boardSize.rows - 1) - i : i;
-                var curCol = dCol == 1 ? (gameOptions.boardSize.cols - 1) - j : j;
+        var movedTiles = 0;
+        var firstRow = (d == UP) ? 1 : 0;
+        var lastRow = gameOptions.boardSize.rows - ((d == DOWN) ? 1 : 0);
+        var firstCol = (d == LEFT) ? 1 : 0;
+        var lastCol = gameOptions.boardSize.cols - ((d == RIGHT) ? 1 : 0);
+        for (var i = firstRow; i < lastRow; i++) {
+            for (var j = firstCol; j < lastCol; j++) {
+                var curRow = dRow == 1 ? (lastRow - 1) - i : i;
+                var curCol = dCol == 1 ? (lastCol - 1) - j : j;
                 var tileValue = this.boardArray[curRow][curCol].tileValue;
                 if (tileValue != 0) {
-                    var newPos = this.getTilePosition(curRow + dRow, curCol + dCol);
+                    var newRow = curRow;
+                    var newCol = curCol;
+                    while (this.isLegalPosition(newRow + dRow, newCol + dCol)){
+                        newRow += dRow;
+                        newCol += dCol;
+                    }
+                    movedTiles ++;
+                    this.boardArray[curRow][curCol].tileSprite.depth = movedTiles;
+                    var newPos = this.getTilePosition(newRow, newCol);
                     this.boardArray[curRow][curCol].tileSprite.x = newPos.x;
                     this.boardArray[curRow][curCol].tileSprite.y = newPos.y;
+                    this.boardArray[curRow][curCol].tileValue = 0;
+                    if (this.boardArray[newRow][newCol].tileValue == tileValue) {
+                        this.boardArray[newRow][newCol].tileValue ++;
+                        this.boardArray[curRow][curCol].tileSprite.setFrame(tileValue);
+                    }
+                    else {
+                        this.boardArray[newRow][newCol].tileValue = tileValue;
+                    }
                 }
             }
         }
+
+        refreshBoard();
+    }
+
+    refreshBoard(){
+        for (var i = 0; i < gameOptions.boardSize.rows; i++) {
+            for (var j = 0; j < gameOptions.boardSize.cols; j++) {
+                var spritePosition = this.getTilePosition(i, j);
+                this.boardArray[i][j].tileSprite.x = spritePosition.x;
+                this.boardArray[i][j].tileSprite.y = spritePosition.y;
+                var tileValue = this.boardArray[i][j].tileValue;
+                if (tileValue > 0) {
+                    this.boardArray[i][j].tileSprite.visible = true;
+                    this.boardArray[i][j].tileSprite.setFrame(tileValue - 1);
+                }
+                else {
+                    this.boardArray[i][j].tileSprite.visible = false;
+                }
+            }
+        }
+        this.addTile();
+    }
+
+    isLegalPosition(row, col){
+        console.log(123);
+        var rowInside = row >= 0 && row < gameOptions.boardSize.rows;
+        var colInside = col >= 0 && col < gameOptions.boardSize.cols;
+        return rowInside && colInside;
     }
 
     handleKey(e) {
@@ -97,7 +146,7 @@ class playGame extends Phaser.Scene {
             switch(e.code) {
                 case "KeyA":
                 case "ArrowLeft":
-                    this.makeMove(0);
+                    this.makeMove(LEFT);
                     break;
                 case "KeyD":
                 case "ArrowRight":
