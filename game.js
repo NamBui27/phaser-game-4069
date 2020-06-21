@@ -10,7 +10,7 @@ var gameOptions = {
     tweenSpeed: 200,
     swipeMaxTime: 1000, // < 1s
     swipeMinDistance: 20, // > 20pixels
-    swipeMinNormal: 0.85 //  
+    swipeMinNormal: 0.85 //
 }
 const LEFT = 0;
 const RIGHT = 1;
@@ -91,7 +91,7 @@ class playGame extends Phaser.Scene {
                 if (tileValue != 0) {
                     var newRow = curRow;
                     var newCol = curCol;
-                    while (this.isLegalPosition(newRow + dRow, newCol + dCol)){
+                    while (this.isLegalPosition(newRow + dRow, newCol + dCol, tileValue)){
                         newRow += dRow;
                         newCol += dCol;
                     }
@@ -111,8 +111,7 @@ class playGame extends Phaser.Scene {
                 }
             }
         }
-
-        refreshBoard();
+        this.refreshBoard();
     }
 
     refreshBoard(){
@@ -125,8 +124,7 @@ class playGame extends Phaser.Scene {
                 if (tileValue > 0) {
                     this.boardArray[i][j].tileSprite.visible = true;
                     this.boardArray[i][j].tileSprite.setFrame(tileValue - 1);
-                }
-                else {
+                } else {
                     this.boardArray[i][j].tileSprite.visible = false;
                 }
             }
@@ -134,11 +132,16 @@ class playGame extends Phaser.Scene {
         this.addTile();
     }
 
-    isLegalPosition(row, col){
-        console.log(123);
+    isLegalPosition(row, col, value){
+        // console.log(123);
         var rowInside = row >= 0 && row < gameOptions.boardSize.rows;
         var colInside = col >= 0 && col < gameOptions.boardSize.cols;
-        return rowInside && colInside;
+        if (!rowInside || ! colInside) {
+            return false;
+        }
+        var emptySpot = this.boardArray[row][col].tileValue == 0;
+        var sameValue = this.boardArray[row][col].tileValue == value;
+        return emptySpot || sameValue;
     }
 
     handleKey(e) {
@@ -172,7 +175,7 @@ class playGame extends Phaser.Scene {
             var swipeMagnitude = Phaser.Geom.Point.GetMagnitude(swipe);
             var longEnough = swipeMagnitude > gameOptions.swipeMinDistance;
             if (longEnough && fastEnough) {
-                Phaser.Geom.Point.GetMagnitude(swipe, 1);
+                Phaser.Geom.Point.SetMagnitude(swipe, 1);
                 if (swipe.x > gameOptions.swipeMinNormal) {
                     this.makeMove(RIGHT);
                 }
@@ -185,7 +188,7 @@ class playGame extends Phaser.Scene {
                 if (swipe.y < -gameOptions.swipeMinNormal) {
                     this.makeMove(UP);
                 }
-                
+
             }
             // console.log("Movement time: " + swipeTime + " ms");
             // console.log("Horizontal distance: " + swipe.x + " pixels");
