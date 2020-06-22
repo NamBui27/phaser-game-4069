@@ -10,7 +10,8 @@ var gameOptions = {
     tweenSpeed: 60,
     swipeMaxTime: 1000, // < 1s
     swipeMinDistance: 20, // > 20pixels
-    swipeMinNormal: 0.85 //
+    swipeMinNormal: 0.85, //
+    aspectRatio: 16/9
 }
 const LEFT = 0;
 const RIGHT = 1;
@@ -18,9 +19,12 @@ const UP = 2;
 const DOWN = 3;
 
 window.onload = function() {
+    var tileAndSpacing = gameOptions.tileSize + gameOptions.tileSpacing;
+    var width = gameOptions.boardSize.cols * tileAndSpacing;
+    width += gameOptions.tileSpacing;
     var gameConfig = {
-        width: gameOptions.boardSize.cols * (gameOptions.tileSize + gameOptions.tileSpacing) + gameOptions.tileSpacing,
-        height: gameOptions.boardSize.rows * (gameOptions.tileSize + gameOptions.tileSpacing) + gameOptions.tileSpacing,
+        width: width,
+        height: width * gameOptions.aspectRatio,
         backgroundColor: 0xecf0f1,
         scene: [bootGame, playGame]
     }
@@ -35,6 +39,12 @@ class bootGame extends Phaser.Scene {
         super("BootGame");
     }
     preload() {
+        this.load.image("restart", "assets/sprites/restart.png");
+        this.load.image("scorepanel", "assets/sprites/scorepanel.png");
+        this.load.image("scorelabels", "assets/sprites/scorelabels.png");
+        this.load.image("logo", "assets/sprites/logo.png");
+        this.load.image("howtoplay", "assets/sprites/howtoplay.png");
+        this.load.image("gametitle", "assets/sprites/gametitle.png");
         this.load.image("emptytile", "assets/sprites/emptytile.png");
         this.load.spritesheet("tiles", "assets/sprites/tiles.png", {
             frameWidth: gameOptions.tileSize,
@@ -54,6 +64,17 @@ class playGame extends Phaser.Scene {
         super("PlayGame");
     }
     create() {
+        var restartXY = this.getTilePosition(-0.8, gameOptions.boardSize.cols - 1);
+        var restartButton = this.add.sprite(restartXY.x, restartXY.y, "restart");
+        var scoreXY = this.getTilePosition(-0.8, 1);
+        this.add.image(scoreXY.x, scoreXY.y, "scorepanel");
+        this.add.image(scoreXY.x, scoreXY.y - 70, "scorelabels");
+        var gameTitle = this.add.image(10, 5, "gametitle");
+        gameTitle.setOrigin(0, 0);
+        var howTo = this.add.image(game.config.width, 5, "howtoplay");
+        howTo.setOrigin(1, 0);
+        var logo = this.add.sprite(game.config.width / 2, game.config.height, "logo");
+        logo.setOrigin(0.5, 1);
         this.canMove = false;
         this.boardArray = [];
         for (let i = 0; i < gameOptions.boardSize.rows; i++) {
@@ -311,6 +332,10 @@ class playGame extends Phaser.Scene {
     getTilePosition(row, col) {
         var posX = gameOptions.tileSpacing*(col + 1) + gameOptions.tileSize*(col + 0.5);
         var posY = gameOptions.tileSpacing*(row + 1) + gameOptions.tileSize*(row + 0.5);
+        var boardHeight = gameOptions.boardSize.rows * gameOptions.tileSize;
+        boardHeight += (gameOptions.boardSize.rows + 1) * gameOptions.tileSpacing;
+        var offsetY = (game.config.height - boardHeight) / 2;
+        posY += offsetY;
         return new Phaser.Geom.Point(posX, posY);
     }
 }
